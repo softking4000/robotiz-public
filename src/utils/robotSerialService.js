@@ -286,6 +286,15 @@ class RobotSerialManager {
   }
 
   /**
+   * [현재 접속 환경이 로컬 개발 서버(localhost)인지 클라우드(Vercel 등)인지 판별]
+   */
+  isLocalBridgeEnvironment() {
+    if (typeof window === 'undefined') return false;
+    const host = window.location.hostname;
+    return host === 'localhost' || host === '127.0.0.1';
+  }
+
+  /**
    * [현재 PC에 연결된 COM 포트 목록 및 COM5 상태 조회]
    */
   async detectAvailablePorts() {
@@ -305,15 +314,21 @@ class RobotSerialManager {
       }
     }
 
-    try {
-      const res = await fetch('/api/serial/ports');
-      if (res.ok) {
-        const data = await res.json();
-        result.bridgeAvailable = true;
-        result.ports = data.ports || [];
+    // 로컬 개발 서버(localhost)일 때만 로컬 브릿지 API(/api/serial/ports) 조회
+    if (this.isLocalBridgeEnvironment()) {
+      try {
+        const res = await fetch('/api/serial/ports');
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
+          const data = await res.json();
+          if (data && data.success) {
+            result.bridgeAvailable = true;
+            result.ports = data.ports || [];
+          }
+        }
+      } catch {
+        // 로컬 브릿지 미응답 시 WebSerial 모드로 동작
       }
-    } catch {
-      // 로컬 브릿지 미응답 시 기본 COM5 정보 제공
     }
 
     if (result.ports.length === 0) {
@@ -332,12 +347,14 @@ class RobotSerialManager {
   }
 
   /**
-   * [방식 1: 브라우저 WebSerial API를 통한 실제 COM5 연결]
+   * [방식 1: 브라우저 WebSerial API를 통한 실제 COM5 연결 (Vercel 배포 및 Chrome/Edge 표준)]
+   * - autoReuse가 true이면 이전에 허용된 COM5 포트가 있을 때 팝업 없이 즉시 자동 연결합니다!
+   * - 처음 연결할 때만 브라우저의 포트 선택 창을 띄워 사용자의 PC COM5에 직접 연결합니다.
    */
-  async connectViaWebSerial({ useFilter = false, autoReuse = false } = {}) {
+  async connectViaWebSerial({ useFilter = false, autoReuse = true } = {}) {
     if (typeof navigator === 'undefined' || !('serial' in navigator)) {
       throw new Error(
-        '현재 브라우저는 WebSerial API를 지원하지 않습니다. Chrome 또는 Edge 브라우저를 사용하거나 [COM5 즉시 자동 연결하기] 버튼을 눌러주세요.'
+        '현재 브라우저는 WebSerial API를 지원하지 않습니다. PC용 Chrome 또는 Edge 브라우저에서 접속해 주세요.'
       );
     }
 
@@ -347,15 +364,23 @@ class RobotSerialManager {
 
     let port = null;
 
+    // 1단계: 이미 브라우저에서 한 번 권한을 허용한 COM5 포트가 있으면 팝업 없이 즉시 재사용
     if (autoReuse) {
-      const existingPorts = await navigator.serial.getPorts();
-      const matched = existingPorts.find((p) => {
-        const info = p.getInfo ? p.getInfo() : {};
-        return info.usbVendorId === ROBOTIS_USB_VID && info.usbProductId === ROBOTIS_USB_PID;
-      });
-      port = matched || existingPorts[0] || null;
+      try {
+        const existingPorts = await navigator.serial.getPorts();
+        if (existingPorts && existingPorts.length > 0) {
+          const matched = existingPorts.find((p) => {
+            const info = p.getInfo ? p.getInfo() : {};
+            return info.usbVendorId === ROBOTIS_USB_VID && info.usbProductId === ROBOTIS_USB_PID;
+          });
+          port = matched || existingPorts[0] || null;
+        }
+      } catch {
+        // 권한 조회 실패 시 아래 requestPort로 진행
+      }
     }
 
+    // 2단계: 허용된 포트가 없으면 브라우저 포트 선택 창 오픈 (User Gesture 유지 상태)
     if (!port) {
       const requestOptions = useFilter
         ? { filters: [{ usbVendorId: ROBOTIS_USB_VID, usbProductId: ROBOTIS_USB_PID }] }
@@ -456,21 +481,40 @@ class RobotSerialManager {
   }
 
   /**
-   * [방식 2: Vite 로컬 하드웨어 브릿지를 통한 COM5 즉시 직결]
+   * [방식 2: 로컬 하드웨어 브릿지 또는 Vercel WebSerial 스마트 자동 직결]
+   * - Vercel 등 클라우드 배포 환경에서는 서버에 '/api/serial/connect'가 없으므로,
+   *   JSON 파싱 에러를 내지 않고 즉시 브라우저의 WebSerial API를 통해 사용자의 PC COM5에 연결합니다!
    */
   async connectViaLocalBridge(targetPort = 'COM5') {
+    // 1. Vercel 등 원격 배포 환경이면 즉시 WebSerial 자동 연결로 실행 (클릭 제스처 유지!)
+    if (!this.isLocalBridgeEnvironment()) {
+      return await this.connectViaWebSerial({ useFilter: false, autoReuse: true });
+    }
+
     if (this.isConnected) {
       await this.disconnect();
     }
 
-    const res = await fetch('/api/serial/connect', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        portName: targetPort,
-        baudRate: ROBOTIS_BAUD_RATE
-      })
-    });
+    let res;
+    try {
+      res = await fetch('/api/serial/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          portName: targetPort,
+          baudRate: ROBOTIS_BAUD_RATE
+        })
+      });
+    } catch {
+      // 로컬 브릿지 서버가 응답하지 않으면 WebSerial로 폴백
+      return await this.connectViaWebSerial({ useFilter: false, autoReuse: true });
+    }
+
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      // 정적 호스팅(Vercel/Netlify 등)에서 HTML/Text 404가 반환된 경우 WebSerial로 폴백
+      return await this.connectViaWebSerial({ useFilter: false, autoReuse: true });
+    }
 
     const data = await res.json();
     if (!res.ok || !data.success) {

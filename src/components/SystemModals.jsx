@@ -850,17 +850,23 @@ export function DeviceConnectModal({
 
   const isUsb = connectType === 'usb';
 
-  // [방법 1: 로컬 하드웨어 브릿지로 COM5 즉시 자동 직결 (팝업 없이 바로 연결)]
+  // [방법 1: 로컬에서는 브릿지 직결, Vercel 클라우드에서는 WebSerial 자동 직결]
   const handleDirectComConnect = async (portName = 'COM5') => {
     setIsConnecting(true);
     try {
       const res = await robotSerialService.connectViaLocalBridge(portName);
-      onConnected('usb', `${res.portName} [115200 bps]`, 'bridge');
+      onConnected('usb', `${res.portName} [115200 bps]`, res.mode || 'bridge');
       onShowToast(
         `✅ 실제 하드웨어 '${res.portName}' 포트에 115200 bps로 즉시 연결되었습니다!`
       );
     } catch (err) {
-      onShowToast(`⚠️ ${err.message}`);
+      if (err && err.name === 'NotFoundError') {
+        onShowToast(
+          '💡 브라우저 상단에 뜨는 포트 목록에서 [COM5 (ROBOTIS Virtual COM Port)]를 선택한 뒤 [연결] 버튼을 눌러주세요!'
+        );
+      } else {
+        onShowToast(`⚠️ ${err.message || 'COM5 포트 연결에 실패했습니다.'}`);
+      }
     } finally {
       setIsConnecting(false);
     }
@@ -880,7 +886,9 @@ export function DeviceConnectModal({
       );
     } catch (err) {
       if (err && err.name === 'NotFoundError') {
-        onShowToast('포트 선택 창이 닫혔습니다. 팝업 없이 연결하려면 [⚡ COM5 즉시 자동 직결] 버튼을 눌러보세요!');
+        onShowToast(
+          '💡 브라우저 상단에 뜨는 포트 목록에서 [COM5 (ROBOTIS Virtual COM Port)]를 선택한 뒤 [연결] 버튼을 눌러주세요!'
+        );
       } else {
         onShowToast(`⚠️ WebSerial 연결 오류: ${err.message || '연결 실패'}`);
       }
