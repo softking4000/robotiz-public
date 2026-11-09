@@ -1,0 +1,982 @@
+/* ============================================================================
+ * [파일 설명: rmotion.css]
+ * 로보티즈 R-Motion (알모션 v1.5.21) 원본 스타일(motion.css, robotselect.css)을
+ * React 환경에 맞게 구현한 스타일시트입니다.
+ * ============================================================================ */
+
+* {
+  box-sizing: border-box;
+  outline: none;
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #f0f5f7;
+  font-size: 12px;
+  color: #333;
+}
+
+/* ========== 1. 상단 헤더 영역 (#tool_top) ========== */
+.rm-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 42px;
+  background-color: #315fe0;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 100;
+  box-shadow: 0 2px 6px rgba(18, 29, 80, 0.2);
+}
+
+.rm-header-left {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.rm-history-back {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  padding: 0;
+  transition: background-color 0.15s ease;
+}
+
+.rm-history-back:hover {
+  background-color: #3059cc;
+}
+
+.rm-history-back img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.rm-logo {
+  width: 100px;
+  margin-left: 6px;
+  margin-right: 14px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.rm-logo img {
+  width: 100%;
+  display: block;
+}
+
+.rm-top-navi {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+}
+
+.rm-top-btn {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  padding: 0;
+  position: relative;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.rm-top-btn:hover {
+  background-color: #3059cc;
+}
+
+.rm-top-btn:active {
+  transform: scale(0.95);
+}
+
+.rm-top-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.rm-current-robot-pill {
+  margin-left: 12px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.rm-current-robot-pill:hover {
+  background: rgba(255, 255, 255, 0.26);
+}
+
+.rm-header-right {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding-right: 42px; /* 우측 햄버거 메뉴 버튼 공간 확보 */
+}
+
+.rm-top-ble {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 8px;
+}
+
+.rm-login-area {
+  display: flex;
+  align-items: center;
+  height: 42px;
+  padding: 0 14px;
+  cursor: pointer;
+  border-left: 1px solid #4874f0;
+  border-right: 1px solid #4874f0;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  transition: background-color 0.15s ease;
+}
+
+.rm-login-area:hover {
+  background-color: #3059cc;
+}
+
+.rm-login-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* ========== 2. 우측 슬라이드 메뉴 (.m_menu / .menuwrap) ========== */
+.rm-menu-toggle-btn {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 42px;
+  height: 42px;
+  background-color: #315fe0;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  z-index: 250;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rm-menu-toggle-btn:hover {
+  background-color: #254ec4;
+}
+
+.rm-menu-toggle-btn img {
+  width: 100%;
+  height: 100%;
+}
+
+.rm-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 200;
+}
+
+.rm-menu-drawer {
+  position: fixed;
+  top: 0;
+  right: -220px;
+  width: 210px;
+  height: 100%;
+  background-color: #ffffff;
+  z-index: 220;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.18);
+  transition: right 0.28s ease-in-out;
+  display: flex;
+  flex-direction: column;
+}
+
+.rm-menu-drawer.open {
+  right: 0;
+}
+
+.rm-menu-drawer-header {
+  height: 42px;
+  background-color: #315fe0;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.rm-category-list {
+  list-style: none;
+  margin: 14px 16px;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.rm-category-list li {
+  padding: 11px 12px;
+  border-bottom: 1px solid #ececf2;
+  color: #315fe0;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background-color 0.15s ease;
+}
+
+.rm-category-list li:hover {
+  background-color: #d6e5f0;
+  color: #1e3a8a;
+}
+
+/* ========== 3. 메인 워크스페이스 (.coding) ========== */
+.rm-workspace {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+  padding-top: 42px;
+}
+
+/* 좌측+중앙 영역 (.coding_left) */
+.rm-coding-left {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-right: 3px solid #c0ceda;
+  overflow: hidden;
+}
+
+/* 좌측 수직 도구 모음 (#tool_side) */
+.rm-tool-side {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 56px;
+  z-index: 30;
+  background-color: #ffffff;
+  border-right: 1px solid #d0dae3;
+  border-bottom: 1px solid #d0dae3;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.rm-tool-side.large {
+  width: 70px;
+}
+
+.rm-tool-box {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-bottom: 1px solid #d0dae3;
+  background-color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease;
+}
+
+.rm-tool-side.large .rm-tool-box {
+  width: 70px;
+  height: 70px;
+}
+
+.rm-tool-box:hover {
+  background-color: #f0f6ff;
+}
+
+.rm-tool-box.active {
+  background-color: #e0edff;
+}
+
+.rm-tool-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.rm-tool-tri {
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  width: 0;
+  height: 0;
+  border-top: 4px solid transparent;
+  border-left: 4px solid transparent;
+  border-bottom: 4px solid #5f7086;
+  border-right: 4px solid #5f7086;
+}
+
+/*中央 3D 모션 뷰어 영역 (#webgl-output / .motion_area) */
+.rm-motion-area {
+  position: relative;
+  flex: 1;
+  height: calc(100% - 140px);
+  background: linear-gradient(180deg, #daf5ff 0%, #effaff 100%);
+  overflow: hidden;
+}
+
+/* 하단 7단계 자세(Pose) 타임라인 영역 (#uipose / .pose_area) */
+.rm-pose-area {
+  position: relative;
+  height: 140px;
+  background-color: #ffffff;
+  border-top: 3px solid #c0ceda;
+  display: flex;
+  padding: 10px 14px;
+  align-items: stretch;
+  z-index: 25;
+}
+
+.rm-pose-labels {
+  width: 44px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  padding-top: 18px;
+  color: #54667c;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.rm-pose-slots {
+  display: flex;
+  flex: 1;
+  gap: 6px;
+}
+
+.rm-pose-col {
+  flex: 1;
+  max-width: 96px;
+  min-width: 42px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.rm-pose-header-btn {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  transition: all 0.15s ease;
+}
+
+.rm-pose-header-btn img {
+  width: 16px;
+  height: 16px;
+}
+
+.rm-pose-header-btn.tit_on {
+  background-color: #3c7cff;
+  border: 1px solid #3c7cff;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(60, 124, 255, 0.35);
+}
+
+.rm-pose-header-btn.tit_off {
+  background-color: #ffffff;
+  border: 1px solid #a8bbd4;
+  color: #54667c;
+}
+
+.rm-pose-header-btn.tit_empty {
+  background-color: #f0f5f7;
+  border: 1px solid #cdd8e5;
+  color: #adbaca;
+}
+
+.rm-pose-slider-track {
+  position: relative;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  cursor: ns-resize;
+}
+
+.rm-pose-slider-base {
+  width: 5px;
+  height: 100%;
+  background: #ebf0f7;
+  border-radius: 10px;
+}
+
+.rm-pose-slider-fill {
+  position: absolute;
+  bottom: 0;
+  width: 5px;
+  background: #1d58ff;
+  border-radius: 10px;
+}
+
+.rm-pose-slider-dial {
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #ffffff;
+  transform: translateY(50%);
+  transition: box-shadow 0.15s ease;
+}
+
+.rm-pose-slider-dial.on {
+  border: 2px solid #0a7bf9;
+  box-shadow: 0 0 8px rgba(10, 123, 249, 0.85);
+}
+
+.rm-pose-slider-dial.off {
+  border: 1px solid #a8bbd4;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.rm-pose-slider-dial.empty {
+  border: 1px solid #d0dae3;
+}
+
+.rm-pose-icons {
+  height: 24px;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.rm-pose-icons img {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.rm-pose-icons img:hover {
+  transform: scale(1.15);
+}
+
+/* ========== 4. 우측 모션 페이지 리스트 영역 (#tool_page / .move) ========== */
+.rm-move-panel {
+  width: 420px;
+  flex-shrink: 0;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  height: 100%;
+}
+
+.rm-move-list {
+  flex: 1;
+  overflow-y: auto;
+  border-bottom: 1px solid #d0dae3;
+  padding-right: 4px;
+}
+
+.rm-move-card {
+  padding: 7px 10px;
+  margin-bottom: 7px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.rm-move-card.on {
+  background: #f5f9ff;
+  border: 2px solid #569eff;
+}
+
+.rm-move-card.off {
+  background: #ffffff;
+  border: 1px solid #dde1e6;
+}
+
+.rm-move-card.empty {
+  background: #f0f5f7;
+  border: 1px solid transparent;
+}
+
+.rm-move-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e2eaf3;
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+}
+
+.rm-move-card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #54667c;
+}
+
+.rm-move-card.empty .rm-move-card-title {
+  color: #adbaca;
+}
+
+.rm-move-card-time {
+  font-size: 12px;
+  font-weight: 600;
+  color: #60a0f0;
+}
+
+.rm-move-card.empty .rm-move-card-time {
+  color: #adbaca;
+}
+
+.rm-move-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #8b9bb0;
+}
+
+.rm-move-footer {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 4px;
+}
+
+.rm-filename-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #60a0f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+.rm-move-menu-btns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rm-move-menu-btns button {
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+
+.rm-move-menu-btns button:hover {
+  transform: scale(1.1);
+}
+
+.rm-move-menu-btns button img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* ========== 5. 로봇 선택 모달 (robotselect.css 완벽 반영) ========== */
+.rm-modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: rmFadeIn 0.25s ease;
+}
+
+@keyframes rmFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.rm-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+}
+
+.rm-modal-container {
+  position: relative;
+  width: 92%;
+  max-width: 640px;
+  max-height: 88vh;
+  background: #ffffff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+}
+
+.rm-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  flex-shrink: 0;
+}
+
+.rm-modal-title {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.rm-modal-close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: #ffffff;
+  font-size: 22px;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.rm-modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.rm-modal-body {
+  flex: 1;
+  padding: 20px 24px;
+  overflow-y: auto;
+  background: #ffffff;
+}
+
+.rm-selector-description {
+  text-align: center;
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.rm-skip-section {
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.rm-skip-btn {
+  background: #f5f5f5;
+  color: #555;
+  border: 1px solid #ddd;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.rm-skip-btn:hover {
+  background: #ebebeb;
+  border-color: #bbb;
+}
+
+/* 컨트롤러 필터 탭 (1단) */
+.rm-filter-tabs {
+  display: flex;
+  background: #f5f5f5;
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 12px;
+  gap: 4px;
+}
+
+.rm-filter-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #666;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.rm-filter-tab.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+}
+
+/* 그룹 탭 (2단) */
+.rm-group-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.rm-group-tab {
+  background: #f8f8f8;
+  border: 2px solid #e8e8e8;
+  border-radius: 10px;
+  padding: 7px 16px;
+  color: #555;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.rm-group-tab.active {
+  background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(56, 161, 105, 0.3);
+}
+
+/* 로봇 카드 가로 패널 (3단) */
+.rm-robot-panel {
+  background: #f8f8f8;
+  border-radius: 12px;
+  padding: 16px;
+  min-height: 270px;
+}
+
+.rm-robot-scroll-area {
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.rm-robot-horizontal-list {
+  display: flex;
+  gap: 14px;
+  padding: 6px 4px;
+}
+
+.rm-robot-card {
+  flex-shrink: 0;
+  width: 155px;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 16px 14px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: 2px solid #e8e8e8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.rm-robot-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.rm-robot-card.selected {
+  border-color: #38a169;
+  background: #f0fff4;
+  box-shadow: 0 8px 24px rgba(72, 187, 120, 0.22);
+}
+
+.rm-selection-indicator {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 28px;
+  height: 28px;
+  background: #38a169;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 8px rgba(56, 161, 105, 0.4);
+}
+
+.rm-robot-icon {
+  width: 84px;
+  height: 84px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  overflow: hidden;
+  border: 1px solid #eee;
+}
+
+.rm-robot-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 6px;
+}
+
+.rm-robot-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 4px 0;
+}
+
+.rm-robot-subtitle {
+  font-size: 11px;
+  color: #888;
+  margin: 0 0 8px 0;
+}
+
+.rm-controller-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.rm-specs {
+  width: 100%;
+  border-top: 1px solid #eee;
+  padding-top: 8px;
+  margin-top: auto;
+}
+
+.rm-spec-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 3px;
+  font-size: 11px;
+}
+
+.rm-spec-label {
+  color: #999;
+}
+
+.rm-spec-value {
+  color: #555;
+  font-weight: 600;
+}
+
+.rm-modal-footer {
+  padding: 16px 24px;
+  background: #f8f8f8;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: center;
+}
+
+.rm-continue-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  border: none;
+  padding: 13px 42px;
+  border-radius: 25px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.rm-continue-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* 토스트 알림 메시지 */
+.rm-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(18, 29, 80, 0.92);
+  color: #ffffff;
+  padding: 10px 22px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 10000;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}
+
+/* 반응형 미디어 쿼리 */
+@media only screen and (max-width: 820px) {
+  .rm-workspace {
+    flex-direction: column;
+  }
+  .rm-coding-left {
+    height: 68%;
+    border-right: none;
+    border-bottom: 3px solid #c0ceda;
+  }
+  .rm-move-panel {
+    width: 100%;
+    height: 32%;
+  }
+}
+

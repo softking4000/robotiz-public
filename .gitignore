@@ -1,0 +1,35 @@
+# ============================================================================
+# [파일명]: .gitignore
+# [교육용 설명]:
+# GitHub에 소스코드를 업로드(Push)할 때 불필요하게 용량이 큰 라이브러리 폴더(node_modules),
+# 빌드 결과물(dist), 그리고 보안상 절대 외부에 노출되면 안 되는 환경변수(.env) 파일들을
+# Git 추적 대상에서 제외하는 설정 파일입니다.
+# ============================================================================
+
+# 1. Node.js 패키지 의존성 폴더 (npm install로 언제든 다시 설치 가능)
+node_modules/
+
+# 2. 프로덕션 빌드 산출물 폴더
+dist/
+dist-ssr/
+
+# 3. 보안 및 개인정보/환경변수 파일 (절대 GitHub에 업로드 금지!)
+.env
+.env.local
+.env.*.local
+
+# 4. 에디터 및 운영체제 임시 파일
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+Thumbs.db
+
+# 5. 로그 파일
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.local
