@@ -2,9 +2,11 @@
 // [파일 설명: AiRemoteModal.jsx]
 // 원본 R-Motion의 AI 리모컨 조종기(#ai_remote_bg: 버튼 / 음성 인식 / 제스처 인식 탭 및
 // 버튼 편집 팝업 #ai_cmb_motion_list_bg)를 담당하는 컴포넌트입니다.
+// - 음성 탭: Web Speech API 한국어 음성 인식 연동
+// - 제스처 탭: MediaDevices API를 통한 실제 USB 카메라 실시간 영상 연동
 // ============================================================================
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 const INITIAL_AI_DATA = {
   // 0: 버튼 탭
@@ -56,6 +58,89 @@ export default function AiRemoteModal({
 
   // 버튼 편집 팝업(#ai_cmb_motion_list_bg) 상태
   const [editingItem, setEditingItem] = useState(null);
+
+  // 제스처 탭 USB 카메라 상태
+  const [isGestureCamOn, setIsGestureCamOn] = useState(false);
+  const [camDevices, setCamDevices] = useState([]);
+  const [selectedCamId, setSelectedCamId] = useState('');
+  const [camError, setCamError] = useState('');
+  const gestureVideoRef = useRef(null);
+  const gestureStreamRef = useRef(null);
+
+  // 제스처 카메라 스트림 안전 종료 함수
+  const stopGestureCamera = useCallback(() => {
+    if (gestureStreamRef.current) {
+      gestureStreamRef.current.getTracks().forEach((t) => {
+        try {
+          t.stop();
+        } catch {
+          // 무시
+        }
+      });
+      gestureStreamRef.current = null;
+    }
+    if (gestureVideoRef.current) {
+      gestureVideoRef.current.srcObject = null;
+    }
+    setIsGestureCamOn(false);
+  }, []);
+
+  // 제스처 탭 USB 카메라 시작 함수
+  const startGestureCamera = useCallback(
+    async (deviceId = selectedCamId) => {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setCamError('이 브라우저에서는 USB 카메라 기능을 지원하지 않습니다.');
+        return;
+      }
+
+      stopGestureCamera();
+      setCamError('');
+
+      try {
+        const constraints = deviceId
+          ? { video: { deviceId: { exact: deviceId }, width: { ideal: 640 }, height: { ideal: 360 } }, audio: false }
+          : { video: { width: { ideal: 640 }, height: { ideal: 360 } }, audio: false };
+
+        let stream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
+        } catch {
+          stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        }
+
+        gestureStreamRef.current = stream;
+        setIsGestureCamOn(true);
+
+        if (gestureVideoRef.current) {
+          gestureVideoRef.current.srcObject = stream;
+          await gestureVideoRef.current.play().catch(() => {});
+        }
+
+        const all = await navigator.mediaDevices.enumerateDevices();
+        const videos = all.filter((d) => d.kind === 'videoinput');
+        setCamDevices(videos);
+
+        const track = stream.getVideoTracks()[0];
+        const settings = track?.getSettings ? track.getSettings() : {};
+        if (settings.deviceId) {
+          setSelectedCamId(settings.deviceId);
+        }
+      } catch (err) {
+        setCamError(`USB 카메라를 열 수 없습니다: ${err.message || '권한 또는 연결 확인'}`);
+      }
+    },
+    [selectedCamId, stopGestureCamera]
+  );
+
+  // 모달이 닫히거나 탭이 바뀔 때 카메라 정리
+  useEffect(() => {
+    if (!isOpen || activeTab !== 2) {
+      stopGestureCamera();
+    }
+    return () => {
+      stopGestureCamera();
+    };
+  }, [isOpen, activeTab, stopGestureCamera]);
 
   if (!isOpen) return null;
 
@@ -216,7 +301,7 @@ export default function AiRemoteModal({
           {[
             { id: 0, label: '🔘 버튼' },
             { id: 1, label: '🎙️ 음성' },
-            { id: 2, label: '✋ 제스처' }
+            { id: 2, label: '✋ 제스처 (USB 카메라)' }
           ].map((tab) => {
             const isOn = activeTab === tab.id;
             return (
@@ -252,7 +337,9 @@ export default function AiRemoteModal({
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              marginBottom: '14px'
+              marginBottom: '14px',
+              flexWrap: 'wrap',
+              gap: '8px'
             }}
           >
             <span style={{ fontSize: '13px', fontWeight: 700, color: '#475569' }}>
@@ -261,7 +348,7 @@ export default function AiRemoteModal({
                 : '✏️ 편집 모드: 카드를 클릭하여 이름과 연결 모션을 수정하세요.'}
             </span>
 
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               {activeTab === 1 && pageMode === 0 && (
                 <button
                   type="button"
@@ -278,6 +365,31 @@ export default function AiRemoteModal({
                   }}
                 >
                   {isListeningVoice ? '🎙️ 듣는 중...' : '🎙️ 마이크 음성 인식 시작'}
+                </button>
+              )}
+
+              {activeTab === 2 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isGestureCamOn) {
+                      stopGestureCamera();
+                    } else {
+                      startGestureCamera(selectedCamId);
+                    }
+                  }}
+                  style={{
+                    background: isGestureCamOn ? '#ef4444' : '#16a34a',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '6px 14px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  {isGestureCamOn ? '📷 USB 카메라 끄기' : '📷 USB 카메라 켜기'}
                 </button>
               )}
 
@@ -351,6 +463,78 @@ export default function AiRemoteModal({
               }}
             >
               {recognizedText}
+            </div>
+          )}
+
+          {/* 제스처 탭 실시간 USB 카메라 프리뷰 영역 */}
+          {activeTab === 2 && (isGestureCamOn || camError) && (
+            <div
+              style={{
+                background: '#0f172a',
+                borderRadius: '12px',
+                padding: '10px',
+                marginBottom: '14px',
+                border: '2px solid #3b82f6'
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '8px',
+                  gap: '8px'
+                }}
+              >
+                <span style={{ color: '#f8fafc', fontSize: '12px', fontWeight: 800 }}>
+                  📹 실시간 USB 카메라 화면
+                </span>
+                {camDevices.length > 0 && (
+                  <select
+                    value={selectedCamId}
+                    onChange={(e) => {
+                      setSelectedCamId(e.target.value);
+                      startGestureCamera(e.target.value);
+                    }}
+                    style={{
+                      background: '#1e293b',
+                      color: '#f8fafc',
+                      border: '1px solid #475569',
+                      borderRadius: '6px',
+                      padding: '4px 8px',
+                      fontSize: '11px',
+                      fontWeight: 700
+                    }}
+                  >
+                    {camDevices.map((c, idx) => (
+                      <option key={c.deviceId || idx} value={c.deviceId}>
+                        {c.label || `USB 카메라 #${idx + 1}`}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              {camError ? (
+                <div style={{ color: '#fca5a5', fontSize: '12px', padding: '12px', textAlign: 'center' }}>
+                  ⚠️ {camError}
+                </div>
+              ) : (
+                <video
+                  ref={gestureVideoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  style={{
+                    width: '100%',
+                    maxHeight: '220px',
+                    objectFit: 'contain',
+                    background: '#020617',
+                    borderRadius: '8px',
+                    transform: 'scaleX(-1)'
+                  }}
+                />
+              )}
             </div>
           )}
 
@@ -659,4 +843,3 @@ export default function AiRemoteModal({
     </div>
   );
 }
-

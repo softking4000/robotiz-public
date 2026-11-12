@@ -7,6 +7,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { RMOTION_BASE_URL, STANDARD_8DOF_JOINTS } from '../data/robotData';
+import UsbCameraOverlay from './UsbCameraOverlay';
 
 export default function Robot3DViewport({
   currentRobot,
@@ -1530,6 +1531,9 @@ export default function Robot3DViewport({
           </button>
         </div>
       )}
+
+      {/* ==================== 9. 좌측 상단 실시간 USB 카메라 모니터 오버레이 ==================== */}
+      <UsbCameraOverlay onShowToast={onShowToast} />
     </div>
   );
 }
